@@ -7,7 +7,7 @@ async function auth(req, res, next) {
   try {
     const token = String(req.headers.authorization).split(" ")[1];
     if (!token) {
-      return res.status(401).json({ msg: "unauthorised 1 " });
+      return res.status(401).json({ msg: "unauthorised" });
     }
 
     const publicKey = fs.readFileSync(path.join(__dirname, "../public.pem"));

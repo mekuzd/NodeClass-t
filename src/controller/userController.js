@@ -63,23 +63,22 @@ const registerUser = async (req, res) => {
     });
 
     const user = await User.findOne({ Email: email });
+    const new_Otp = Math.floor(100000 + Math.random() * 900000);
     // create otp collection Email can be used so do away with userID in scheme and also no need for User.findOne
     await userOTPVerification.create({
       userID: user._id,
       userEmail: user.Email,
-      otp: Math.floor(100000 + Math.random() * 900000),
+      otp: new_Otp,
       createdAt: Date.now(),
       expirededAt: Date.now() + 3600000,
     });
 
-    // find otp and send to mail
-    let otpCollection = await userOTPVerification.findOne({ userEmail: email });
-    const { otp } = otpCollection;
+    // send otp to mail
     await mailer.sendMail({
       subject: "shop4me reg",
       from: "info@shop4me.com",
       to: email,
-      html: `<h1> welcome to shop4me ${firstname} verify your mail with the otp code ${otp}, otp expires in 1hr</h1>`,
+      html: `<h1> welcome to shop4me ${firstname} verify your mail with the otp code ${new_Otp}, otp expires in 1hr</h1>`,
     });
     res.status(201).json({ message: "acc registered " });
   } catch (error) {
@@ -142,9 +141,9 @@ const searchUser = async (req, res) => {
       id: user._id,
     };
     const token = jwt.sign(payload, privateKey, { algorithm: "RS256" });
-    const { FirstName } = user;
+
     res.status(202).json({
-      message: `welcome to eatwell ${FirstName}`,
+      message: "welcome to eatwell ",
       user: userDetails,
       token,
     });
@@ -169,27 +168,46 @@ const forgetPass = async (req, res) => {
       return;
     }
     // create new collection for ForgetPassotp in data base
-    await ForgetPassword.create({
-      userEmail: email,
-      otp: Math.floor(100000 + Math.random() * 900000),
-      createdAt: Date.now(),
-      expirededAt: Date.now() + 3600000,
-    });
+    const new_Otp = Math.floor(100000 + Math.random() * 900000); //create new_Otp
+    const userFound = await ForgetPassword.findOne({ userEmail: email }); // find if otp has been generated earlier
 
-    const userFound = await ForgetPassword.findOne({ userEmail: email });
-    const { otp } = userFound; // send otp to user email
+    if (!userFound) {
+      // if otp hasnt been generated ,create a new document for the user
+      await ForgetPassword.create({
+        userEmail: email,
+        otp: new_Otp,
+        createdAt: Date.now(),
+        expirededAt: Date.now() + 3600000,
+      });
+      await mailer.sendMail({
+        subject: "shop4me reg",
+        from: "info@shop4me.com",
+        to: email,
+        html: `<h1>  input the otp code ${new_Otp} to change password, otp expires in 1hr</h1>`,
+      });
+      res.status(200).json({ msg: `an otp has been sent to ${email} ` });
+      return;
+    }
+
+    await ForgetPassword.findOneAndUpdate(
+      //if user has been created lets update the existing user's otp
+      { userEmail: email },
+      { otp: new_Otp },
+      { new: true },
+    );
+
     await mailer.sendMail({
       subject: "shop4me reg",
       from: "info@shop4me.com",
       to: email,
-      html: `<h1>  input the otp code ${otp} to change password, otp expires in 1hr</h1>`,
+      html: `<h1>  input the otp code ${new_Otp} to change password, otp expires in 1hr</h1>`,
     });
     res.status(200).json({ msg: `an otp has been sent to ${email} ` });
   } catch (error) {
     console.log(error);
     res
       .status(500)
-      .json({ msg: "something unexpected happened,please contact admin" }); //or pops up when there is adatabase connection  err or schema or failed to require a used module
+      .json({ msg: "something unexpected happened,please contact admin" }); //or pops up when there is a database connection  err or schema or failed to require a used module
   }
 };
 

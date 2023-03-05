@@ -3,7 +3,6 @@ const { Schema, model } = require("mongoose");
 const OtpForgetPass = new Schema({
   userEmail: {
     type: Schema.Types.String,
-    unique: true,
   },
   otp: {
     type: Schema.Types.String,
