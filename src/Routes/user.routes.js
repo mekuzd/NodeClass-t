@@ -6,7 +6,6 @@ const {
   VerifyOtp,
   UploadProfileImage,
   forgetPass,
-  verifyPassOtp,
   verifyPassOtpandChangePass,
 } = require("../controller/userController");
 

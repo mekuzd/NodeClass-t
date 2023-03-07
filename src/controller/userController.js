@@ -55,14 +55,13 @@ const registerUser = async (req, res) => {
   const { firstname, lastname, email, password } = req.body; // can also be User.create(req.body) instead of destructuring
 
   try {
-    await User.create({
+    const user = await User.create({
       Email: email,
       LastName: lastname,
       FirstName: firstname,
       Password: password,
     });
 
-    const user = await User.findOne({ Email: email });
     const new_Otp = Math.floor(100000 + Math.random() * 900000);
     // create otp collection Email can be used so do away with userID in scheme and also no need for User.findOne
     await userOTPVerification.create({
@@ -117,6 +116,7 @@ const searchUser = async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await User.findOne({ Email: email });
+
     if (!user) {
       res.status(401).json({ message: "one or more invalid credentials" });
       return;
@@ -140,7 +140,7 @@ const searchUser = async (req, res) => {
       email: user.Email,
       id: user._id,
     };
-    const token = jwt.sign(payload, privateKey, { algorithm: "RS256" });
+    const token = jwt.sign(payload, privateKey, { algorithm: "RS256" }); //expired can b added
 
     res.status(202).json({
       message: "welcome to eatwell ",
@@ -169,7 +169,7 @@ const forgetPass = async (req, res) => {
     }
     // create new collection for ForgetPassotp in data base
     const new_Otp = Math.floor(100000 + Math.random() * 900000); //create new_Otp
-    const userFound = await ForgetPassword.findOne({ userEmail: email }); // find if otp has been generated earlier
+    const userFound = await ForgetPassword.findOne({ userEmail: email }); // find if otp has been generated earlier for the above email
 
     if (!userFound) {
       // if otp hasnt been generated ,create a new document for the user

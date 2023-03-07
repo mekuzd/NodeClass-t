@@ -29,7 +29,8 @@ const userSchema = new Schema( //instance the schema is a structure of what goes
     timestamps: true,
   },
 );
-
+// middleWare moongoose ,intercepts schema properties before usage
+// there is no need for next if using async and await
 userSchema.pre("save", async function (next) {
   const hashedPassword = await bcrypt.hash(this.Password, 10);
   this.Password = hashedPassword;
