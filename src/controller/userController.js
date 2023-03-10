@@ -7,23 +7,17 @@ const userOTPVerification = require("../models/Otp");
 const formidable = require("formidable");
 const ForgetPassword = require("../models/OtpFrorgetPass");
 const jwt = require("jsonwebtoken");
+const ev = require("../Events/emailHandler");
+// testing user
 const createUser = async (req, res) => {
   try {
-    await User.create({
-      Email: "tochukwu@gmail.com",
-      LastName: "emeka",
-      FirstName: "seun",
-      Password: "eme@96.com",
-    });
-    const html = fs.readFileSync(
-      path.join(__dirname, "../templates/register.html"),
-    );
-    await mailer.sendMail({
-      subject: "shop4me reg",
-      from: "info@shop4me.com",
-      to: "Mekuzdes@gmail.com",
-      html: html,
-    });
+    // await User.create({
+    //   Email: "tochukwu@gmail.com",
+    //   LastName: "emeka",
+    //   FirstName: "seun",
+    //   Password: "eme@96.com",
+    // });
+    ev.emit("mail");
 
     res.status(201).json({ message: "acc created" });
   } catch (error) {
@@ -36,17 +30,21 @@ const createUser = async (req, res) => {
 const UploadProfileImage = async (req, res) => {
   const form = formidable();
   form.parse(req, async (err, fields, files) => {
-    const { name } = fields;
-    console.log(files);
     if (err) throw new Error(err);
-    const readData = await fs.readFileSync(files["image"].filepath);
+    const filePath = files["image"].filepath;
+    const readStream = fs.createReadStream(filePath);
+    const fileUri = `storage/${files["image"].originalFilename}`;
+    const pathToStore = path.join(__dirname, `../${fileUri}`);
+    const writeStream = fs.createWriteStream(pathToStore);
+    const Stream = readStream.pipe(writeStream);
 
-    const pathToStore = path.join(
-      __dirname,
-      `../storage/${files["image"].originalFilename}`,
-    );
-    await fs.writeFileSync(pathToStore, readData);
-    res.end("working");
+    Stream.on("finish", () => {
+      res.send("working");
+    });
+    Stream.on("error", (err) => {
+      console.log(err);
+      res.status(500).json({ msg: "file upload error" });
+    });
   });
 };
 
@@ -189,8 +187,9 @@ const forgetPass = async (req, res) => {
       return;
     }
 
+    //if user has been created lets update the existing user's otp
+
     await ForgetPassword.findOneAndUpdate(
-      //if user has been created lets update the existing user's otp
       { userEmail: email },
       { otp: new_Otp },
       { new: true },

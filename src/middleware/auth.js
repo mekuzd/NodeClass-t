@@ -12,8 +12,7 @@ async function auth(req, res, next) {
 
     const publicKey = fs.readFileSync(path.join(__dirname, "../public.pem"));
     const decoded = jwt.verify(token, publicKey, { algorithms: "RS256" });
-    console.log(decoded);
-    const user = await User.findOne({ _id: decoded.id });
+    const user = await User.findOne({ _id: decoded.id }).select("-Password"); ///this can eliminate sending the password
 
     if (!user) {
       return res.status(401).json({ msg: "unauthorised " });

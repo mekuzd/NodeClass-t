@@ -10,7 +10,7 @@ const {
 } = require("../controller/userController");
 
 const router = Router();
-router.get("/create", createUser);
+router.post("/create", createUser);
 router.post("/search", searchUser);
 router.post("/regUsers", registerUser);
 router.post("/verifyotp", VerifyOtp);
