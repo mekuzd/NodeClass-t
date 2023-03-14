@@ -1,18 +1,16 @@
 const mailer = require("../Config/email");
-const fs = require("fs");
-const path = require("path");
 const events = require("events");
 
 const ev = new events.EventEmitter();
-ev.on("mail", () => {
-  const html = fs.readFileSync(
-    path.join(__dirname, "../templates/register.html"),
-  );
+ev.on("mail", (message, email) => {
   mailer.sendMail({
     subject: "shop4me reg",
     from: "info@shop4me.com",
-    to: "emekaseun.es@gmail.com",
-    html: html,
+    to: email,
+    template: "register",
+    ctx: {
+      message,
+    },
   });
 });
 module.exports = ev;

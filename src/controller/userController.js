@@ -11,13 +11,14 @@ const ev = require("../Events/emailHandler");
 // testing user
 const createUser = async (req, res) => {
   try {
+    const message = `welcome ${req.body.name}, please verify your mail ${req.body.email}`;
     // await User.create({
     //   Email: "tochukwu@gmail.com",
     //   LastName: "emeka",
     //   FirstName: "seun",
     //   Password: "eme@96.com",
     // });
-    ev.emit("mail");
+    ev.emit("mail", message, req.body.email);
 
     res.status(201).json({ message: "acc created" });
   } catch (error) {
@@ -71,12 +72,8 @@ const registerUser = async (req, res) => {
     });
 
     // send otp to mail
-    await mailer.sendMail({
-      subject: "shop4me reg",
-      from: "info@shop4me.com",
-      to: email,
-      html: `<h1> welcome to shop4me ${firstname} verify your mail with the otp code ${new_Otp}, otp expires in 1hr</h1>`,
-    });
+    const message = ` welcome to shop4me ${firstname} verify your mail with the otp code ${new_Otp}, otp expires in 1hr `;
+    ev.emit("mail", message, req.body.email);
     res.status(201).json({ message: "acc registered " });
   } catch (error) {
     console.log(error);
@@ -170,19 +167,19 @@ const forgetPass = async (req, res) => {
     const userFound = await ForgetPassword.findOne({ userEmail: email }); // find if otp has been generated earlier for the above email
 
     if (!userFound) {
-      // if otp hasnt been generated ,create a new document for the user
+      // if otp hasnt been generated, create a new document for the user
       await ForgetPassword.create({
         userEmail: email,
         otp: new_Otp,
         createdAt: Date.now(),
         expirededAt: Date.now() + 3600000,
       });
-      await mailer.sendMail({
-        subject: "shop4me reg",
-        from: "info@shop4me.com",
-        to: email,
-        html: `<h1>  input the otp code ${new_Otp} to change password, otp expires in 1hr</h1>`,
-      });
+
+      //send email to first time password change
+      const message = `  input the otp code ${new_Otp} to change password, otp expires in 1hr `;
+
+      // mail function
+      ev.emit("mail", message, email);
       res.status(200).json({ msg: `an otp has been sent to ${email} ` });
       return;
     }
@@ -194,13 +191,9 @@ const forgetPass = async (req, res) => {
       { otp: new_Otp },
       { new: true },
     );
-
-    await mailer.sendMail({
-      subject: "shop4me reg",
-      from: "info@shop4me.com",
-      to: email,
-      html: `<h1>  input the otp code ${new_Otp} to change password, otp expires in 1hr</h1>`,
-    });
+    const message = `  input the otp code ${new_Otp} to change password, otp expires in 1hr `;
+    //mail function
+    ev.emit("mail", message, email);
     res.status(200).json({ msg: `an otp has been sent to ${email} ` });
   } catch (error) {
     console.log(error);
@@ -227,7 +220,7 @@ const verifyPassOtpandChangePass = async (req, res) => {
       { Email: userEmail },
       { Password: newPassword },
       { new: true },
-    );
+    ).select("-Password");
 
     res.status(200).json({ msg: "password changed", user });
   } catch (error) {
