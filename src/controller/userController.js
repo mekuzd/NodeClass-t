@@ -82,7 +82,7 @@ const registerUser = async (req, res) => {
 };
 
 //  otp for email verification
-const VerifyOtp = async (req, res) => {
+const VerifyEmail = async (req, res) => {
   try {
     const { user_otp } = req.body;
     const userOtpfound = await userOTPVerification.findOne({ otp: user_otp });
@@ -235,7 +235,7 @@ module.exports = {
   createUser,
   searchUser,
   registerUser,
-  VerifyOtp,
+  VerifyEmail,
   UploadProfileImage,
   forgetPass,
   verifyPassOtpandChangePass,
