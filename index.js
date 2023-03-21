@@ -13,7 +13,7 @@ app.use(express.json());
 
 //routes
 app.use("/users", userRoutes);
-// testing
+// testingauth
 
 app.get("/admin", [auth], (req, res) => {
   res.status(200).json(req.user);
